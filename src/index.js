@@ -1,3 +1,4 @@
+// console.log(process.hrtime());
 const https = require('https');
 const url = require('url');
 const querystring = require('querystring');
@@ -126,7 +127,7 @@ exports.handler = (event, context, callback) => {
       }
   ], function(error) {
     console.log('end');
-    console.log(process.hrtime());
+    // console.log(process.hrtime());
   });
 
 };
