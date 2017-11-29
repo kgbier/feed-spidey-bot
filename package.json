@@ -1,0 +1,12 @@
+{
+  "name": "spideybot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Konrad Biernacki <kgbier@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^2.6.0",
+    "feedparser": "^2.2.4",
+    "lodash": "^4.17.4"
+  }
+}

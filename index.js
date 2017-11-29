@@ -1,72 +1,120 @@
-const querystring = require('querystring');
 const https = require('https');
+const url = require('url');
+const querystring = require('querystring');
 
-const postData = JSON.stringify({
-    'content': '***CENSORED***',
-});
+const async = require('async');
+var FeedParser = require('feedparser');
 
-const postRichData = JSON.stringify({
-    'embeds': [{
-        title: 'Plz Forgive',
-        // type: 'rich', // always rich
-        description: 'TOTALLY not a description',
-        url: 'https://google.com.au',
-        // timestamp: '', //ISO8601 timestamp
-        color: 16777215, //Integer
-        /*
-        footer
-        image
-        thumbnail
-        -video
-        -provider
-        author
-        */
-        fields: [
-            {
-                name: 'wow such link',
-                value: '[masked link to who knows where](http://google.com)',
-                inline: false,
-            },
-            {
-                name: 'second field',
-                value: '*usual* **__Markdown__**',
-                inline: false,
-            },
-        ],
-    }],
-});
-
-const options = {
-    hostname: 'discordapp.com',
+const WebhookEndpoints = {
+  'spidey@totesnotrobots': {
     path: '---',
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData),
-    },
+  },
 };
+
+const Personalities = {
+  'botpersonality': {
+    name: 'BotName',
+    colour: 16765995,
+    avatar: '.jpg',
+    thumbnail: '.jpg',
+    subscribers: 'spidey@totesnotrobots',
+  },
+}
+
+const UpdateChannels = [
+  {
+    name: 'Channel',
+    description: 'Channel Description',
+    personality: 'parahumans',
+    feedUrl: 'https://feed.com/feed',
+    transformer: (article, personality) => {
+      return {
+        title: article.title,
+        description: article.link,
+        date: article.date,
+        color: personality.colour,
+        footer: {
+          text: 'SpideyBot v0.1 alpha',
+        },
+      }
+    }
+  }
+];
 
 exports.handler = (event, context, callback) => {
+  const lastRun = new Date(parseInt(process.env.LAST_RUN_AT));
 
-    const req = https.request(options, (res) => {
-        console.log(`STATUS: ${res.statusCode}`);
-        console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
-        res.setEncoding('utf8');
-        res.on('data', (chunk) => {
-            console.log(`BODY: ${chunk}`);
+  const feeds = UpdateChannels.map(channel => {
+    return {
+      channel: channel,
+      request: https.request(channel.feedUrl),
+      readableFeed: new FeedParser(),
+      articles: [],
+      payload: {
+        embeds: [],
+      },
+    };
+  });
+
+  async.waterfall([
+      function(waterfall_callback) {
+        let calls = [];
+        for(const feed of feeds) {
+          calls.push(parallel_callback => {
+            feed.request.on('response', (res) => {
+              res.setEncoding('utf8');
+              res.pipe(feed.readableFeed);
+            });
+            feed.readableFeed.on('readable', () => {
+              let article;
+              while(article = feed.readableFeed.read()) {
+                if(article.date > lastRun) {
+                  feed.articles.push(article);
+                }
+              }
+            });
+            feed.readableFeed.on('finish', () => {
+              parallel_callback();
+            });
+            feed.request.end();
+          });
+        }
+        async.parallel(calls, (err) => {
+          waterfall_callback();
         });
-        res.on('end', () => {
-            console.log('No more data in response.');
+      },
+      function(waterfall_callback) {
+        for(const feed of feeds) {
+          for(const article of feed.articles) {
+            let title = article.categories[0] + ' - ' + article.title;
+            feed.payload.embeds.push(feed.channel.transformer(article, Personalities[feed.channel.personality]));
+          }
+        }
+          waterfall_callback(null);
+      },
+      function(waterfall_callback) {
+        const feed = feeds[0];
+        const payload = JSON.stringify(feed.payload);
+        const options = {
+          hostname: 'discordapp.com',
+          path: WebhookEndpoints['spidey@totesnotrobots'].path,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(payload),
+          },
+        };
+        const req = https.request(options);
+        req.on('finish', (e) => {
+          waterfall_callback(null, 'done');
         });
-    });
+        req.on('error', (e) => {
+          console.log(`Error: (request) ${e.message}`);
+        });
+        req.end(payload);
+      }
+  ]);
 
-    req.on('error', (e) => {
-        console.log(`problem with request: ${e.message}`);
-        callback(null, 'End: error');
-    });
-
-    // write data to request body
-    req.write(postData);
-    req.end();
-    callback(null, 'End: Finished');
 };
+
+exports.handler(null, null, (error, message) => { console.log(error); console.log(message); process.exit(); });
