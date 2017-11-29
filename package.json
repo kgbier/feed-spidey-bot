@@ -4,9 +4,15 @@
   "main": "index.js",
   "author": "Konrad Biernacki <kgbier@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "build": "webpack"
+  },
   "dependencies": {
     "async": "^2.6.0",
     "feedparser": "^2.2.4",
     "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "webpack": "^3.8.1"
   }
 }
