@@ -6,9 +6,12 @@ const async = require('async');
 var FeedParser = require('feedparser');
 
 const WebhookEndpoints = {
-  'spidey@totesnotrobots': {
-    path: '---',
+  'spidey#totesnotrobots': {
+    path: '/api/webhooks/ID/TOKEN'
   },
+  'bot2#bot2': {
+    path: '/api/webhooks/ID/TOKEN'
+  }
 };
 
 const Personalities = {
@@ -17,7 +20,7 @@ const Personalities = {
     colour: 16765995,
     avatar: '.jpg',
     thumbnail: '.jpg',
-    subscribers: 'spidey@totesnotrobots',
+    subscribers: 'spidey#totesnotrobots',
   },
 }
 
@@ -31,7 +34,7 @@ const UpdateChannels = [
       return {
         title: article.title,
         description: article.link,
-        date: article.date,
+        timestamp: article.date,
         color: personality.colour,
         footer: {
           text: 'SpideyBot v0.1 alpha',
@@ -90,30 +93,41 @@ exports.handler = (event, context, callback) => {
             feed.payload.embeds.push(feed.channel.transformer(article, Personalities[feed.channel.personality]));
           }
         }
-          waterfall_callback(null);
+        waterfall_callback(null);
       },
       function(waterfall_callback) {
-        const feed = feeds[0];
-        const payload = JSON.stringify(feed.payload);
-        const options = {
-          hostname: 'discordapp.com',
-          path: WebhookEndpoints['spidey@totesnotrobots'].path,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(payload),
-          },
-        };
-        const req = https.request(options);
-        req.on('finish', (e) => {
-          waterfall_callback(null, 'done');
+        let calls = [];
+        for(const feed of feeds) {
+          calls.push(parallel_callback => {
+            const payload = JSON.stringify(feed.payload);
+            const options = {
+              hostname: 'discordapp.com',
+              path: WebhookEndpoints[Personalities[feed.channel.personality].subscribers].path,
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload),
+              },
+            };
+            const request = https.request(options, (res) => {
+              parallel_callback()
+            });
+            request.on('error', (e) => {
+              console.log(e);
+            });
+            // request.end();
+            request.end(payload);
+            // console.log(payload);
+          });
+        }
+        async.parallel(calls, (err) => {
+          waterfall_callback();
         });
-        req.on('error', (e) => {
-          console.log(`Error: (request) ${e.message}`);
-        });
-        req.end(payload);
       }
-  ]);
+  ], function(error) {
+    console.log('end');
+    console.log(process.hrtime());
+  });
 
 };
 
