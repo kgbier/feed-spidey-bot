@@ -132,4 +132,4 @@ exports.handler = (event, context, callback) => {
 
 };
 
-exports.handler(null, null, (error, message) => { console.log(error); console.log(message); process.exit(); });
+// exports.handler(null, null, (error, message) => { console.log(error); console.log(message); process.exit(); });
