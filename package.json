@@ -8,9 +8,7 @@
     "build": "webpack"
   },
   "dependencies": {
-    "async": "^2.6.0",
-    "feedparser": "^2.2.4",
-    "lodash": "^4.17.4"
+    "feedparser": "^2.2.4"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",

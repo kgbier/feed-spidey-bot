@@ -4,6 +4,6 @@ module.exports = {
     colour: 16765995,
     avatar: '.jpg',
     thumbnail: '.jpg',
-    subscribers: 'spidey#totesnotrobots',
+    subscriber: 'spidey#totesnotrobots',
   },
 };
