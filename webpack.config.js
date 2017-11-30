@@ -20,6 +20,9 @@ module.exports = {
       }
     ]
   },
+  externals: {
+    'aws-sdk': 'aws-sdk',
+  },
   plugins: [
     new webpack.optimize.UglifyJsPlugin(),
   ]
