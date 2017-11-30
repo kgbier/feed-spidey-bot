@@ -19,13 +19,17 @@ class Feed {
   }
 
   execute() {
+    console.log('Fetching', this.name);
     this.fetchNewArticles((err, articles) => {
       if(err) { console.error(err); return; }
+      console.log('Fetched', this.name);
       const payload = {
         embeds: articles.map(this.generateDiscordEmbed.bind(this))
       };
+      console.log('Posting', this.name);
       this.webhookPost(payload, (err) => {
         if(err) { console.error(err); return; }
+        console.log('Posted', this.name);
       });
     });
   }
@@ -40,6 +44,7 @@ class Feed {
       while(article = stream.read()) {
         if(article.date > this.lastRun) {
           articles.push(article);
+          console.log('Queued', this.name, ':', article.title);
         }
       }
     });

@@ -1,3 +1,5 @@
+const VERSION_TEXT = 'SpideyBot v0.2 alpha';
+
 module.exports = [
   {
     name: 'Channel',
@@ -11,7 +13,7 @@ module.exports = [
         timestamp: article.date,
         color: personality.colour,
         footer: {
-          text: 'SpideyBot v0.1 alpha',
+          text: VERSION_TEXT,
         },
       };
     },
