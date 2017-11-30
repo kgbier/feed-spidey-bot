@@ -6,44 +6,9 @@ const querystring = require('querystring');
 const async = require('async');
 var FeedParser = require('feedparser');
 
-const WebhookEndpoints = {
-  'spidey#totesnotrobots': {
-    path: '/api/webhooks/ID/TOKEN'
-  },
-  'bot2#bot2': {
-    path: '/api/webhooks/ID/TOKEN'
-  }
-};
-
-const Personalities = {
-  'botpersonality': {
-    name: 'BotName',
-    colour: 16765995,
-    avatar: '.jpg',
-    thumbnail: '.jpg',
-    subscribers: 'spidey#totesnotrobots',
-  },
-}
-
-const UpdateChannels = [
-  {
-    name: 'Channel',
-    description: 'Channel Description',
-    personality: 'parahumans',
-    feedUrl: 'https://feed.com/feed',
-    transformer: (article, personality) => {
-      return {
-        title: article.title,
-        description: article.link,
-        timestamp: article.date,
-        color: personality.colour,
-        footer: {
-          text: 'SpideyBot v0.1 alpha',
-        },
-      }
-    }
-  }
-];
+const Personalities = require('./config/personalities');
+const UpdateChannels = require('./config/updateChannels');
+const WebhookEndpoints = require('./config/webhookEndpoints');
 
 exports.handler = (event, context, callback) => {
   const lastRun = new Date(parseInt(process.env.LAST_RUN_AT));
@@ -132,4 +97,3 @@ exports.handler = (event, context, callback) => {
 
 };
 
-// exports.handler(null, null, (error, message) => { console.log(error); console.log(message); process.exit(); });
