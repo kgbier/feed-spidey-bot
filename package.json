@@ -5,6 +5,7 @@
   "author": "Konrad Biernacki <kgbier@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "deploy": "./deploy.sh",
     "build": "webpack"
   },
   "dependencies": {
