@@ -21,6 +21,7 @@ class Feed {
   execute() {
     console.log('Fetching', this.name);
     this.fetchNewArticles((err, articles) => {
+      if(articles.length <= 0) { console.log('Finished', this.name, '(No new articles)'); return; }
       if(err) { console.error(err); return; }
       console.log('Fetched', this.name);
       const payload = {
