@@ -36,9 +36,9 @@ class Feed {
   }
 
   fetchNewArticles(callback) {
+    const articles = [];
     const stream = new FeedParser();
     const request = https.request(this.feedUrl);
-    const articles = [];
 
     stream.on('readable', () => {
       let article;

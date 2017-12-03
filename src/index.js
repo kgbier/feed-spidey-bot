@@ -8,6 +8,7 @@ const UpdateChannels = require('./config/updateChannels');
 const Feed = require('./classes/Feed');
 
 exports.handler = (event, context, callback) => {
+  const now = Date.now().toString();
 
   const feeds = UpdateChannels.map(channel => {
     return new Feed(channel.name,
@@ -21,7 +22,6 @@ exports.handler = (event, context, callback) => {
     feed.execute();
   }
 
-  const now = Date.now().toString();
   const lambda = new AWS.Lambda();
   const params = {
     FunctionName: context.invokedFunctionArn,
