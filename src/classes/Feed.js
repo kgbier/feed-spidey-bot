@@ -39,9 +39,9 @@ class Feed {
     const articles = [];
     const stream = new FeedParser();
     const request = https.request(this.feedUrl);
-    request.setTimeout(3000, (err) => {
-      callback(err);
-    });
+    request.setTimeout(3000, (() => {
+      callback('Request timed out: ' + this.name);
+    }).bind(this));
 
     stream.on('readable', () => {
       let article;
@@ -88,9 +88,9 @@ class Feed {
     const request = https.request(options, (res) => {
       callback();
     });
-    request.setTimeout(3000, (err) => {
-      callback(err);
-    });
+    request.setTimeout(3000, (() => {
+      callback('Post to Discord timed out: ' + this.name);
+    }).bind(this));
     request.on('error', (err) => {
       callback(err);
     });
