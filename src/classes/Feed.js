@@ -88,6 +88,9 @@ class Feed {
     const request = https.request(options, (res) => {
       callback();
     });
+    request.setTimeout(3000, (err) => {
+      callback(err);
+    });
     request.on('error', (err) => {
       callback(err);
     });
