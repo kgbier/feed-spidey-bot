@@ -39,6 +39,9 @@ class Feed {
     const articles = [];
     const stream = new FeedParser();
     const request = https.request(this.feedUrl);
+    request.setTimeout(3000, (err) => {
+      callback(err);
+    });
 
     stream.on('readable', () => {
       let article;
