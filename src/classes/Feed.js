@@ -43,15 +43,16 @@ class Feed {
       callback('Request timed out: ' + this.name);
     }).bind(this));
 
-    stream.on('readable', () => {
+    stream.on('readable', (() => {
       let article;
       while(article = stream.read()) {
+        console.log('Comparing', this.name, ':', article.title, article.date, 'against last run', this.lastRun);
         if(article.date > this.lastRun) {
           articles.push(article);
           console.log('Queued', this.name, ':', article.title);
         }
       }
-    });
+    }).bind(this));
     stream.on('finish', () => {
       callback(null, articles);
     });
