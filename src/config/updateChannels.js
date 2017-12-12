@@ -1,4 +1,4 @@
-const VERSION_TEXT = 'SpideyBot v0.2 alpha';
+const VERSION_TEXT = 'SpideyBot v0.3 alpha';
 
 module.exports = [
   {
