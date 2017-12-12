@@ -137,7 +137,6 @@ class Feed {
     request.on('error', (err) => {
       callback(err);
     });
-    // request.end();
     request.end(payload);
   }
 
