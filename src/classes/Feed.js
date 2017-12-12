@@ -131,6 +131,7 @@ class Feed {
       callback();
     });
     request.setTimeout(3000, (() => {
+      request.abort();
       callback('Post to Discord timed out: ' + this.name);
     }).bind(this));
     request.on('error', (err) => {
