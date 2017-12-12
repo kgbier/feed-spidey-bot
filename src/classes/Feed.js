@@ -1,14 +1,15 @@
 const https = require('https');
+const crypto = require('crypto');
 
 const FeedParser = require('feedparser');
 
+const config = require('../config/config');
 const Personalities = require('../config/personalities');
 const WebhookEndpoints = require('../config/webhookEndpoints');
 
 class Feed {
 
   constructor(name, description, personality, feedUrl, transformer) {
-    this.lastRun = new Date(parseInt(process.env.LAST_RUN_AT));
     this.personality = Personalities[personality];
     this.webhook = WebhookEndpoints[this.personality.subscriber];
     this.name = name;
@@ -16,6 +17,9 @@ class Feed {
     this.feedUrl = feedUrl;
     this.transformer = transformer;
     this.articles = [];
+
+    this.streamStatus = null;
+    this.storedLastBuildDate = 0;
   }
 
   execute() {
@@ -38,28 +42,65 @@ class Feed {
   fetchNewArticles(callback) {
     const articles = [];
     const stream = new FeedParser();
-    const request = https.request(this.feedUrl);
-    request.setTimeout(3000, (() => {
-      callback('Request timed out: ' + this.name);
-    }).bind(this));
 
-    stream.on('readable', (() => {
-      let article;
-      while(article = stream.read()) {
-        console.log('Comparing', this.name, ':', article.title, article.date, 'against last run', this.lastRun);
-        if(article.date > this.lastRun) {
-          articles.push(article);
-          console.log('Queued', this.name, ':', article.title);
+    stream.on('meta', (() => {
+      const hash = crypto.createHash('md4');
+      hash.update(stream.meta.xmlUrl);
+      const feedUrlHash = hash.digest('base64');
+      const lastBuildDate = stream.meta.date.getTime();
+      const data = global.DYNAMO_CLIENT.get({
+        TableName: config.DYNAMODB_TABLE_NAME,
+        Key: {
+          feed: feedUrlHash,
         }
-      }
+      }).promise().then(((data) => {
+        console.log('Get feed dynamo success:', this.name);
+        if(data.Item) {
+          this.storedLastBuildDate = data.Item.lastBuildDate;
+          console.log('Comparing feed', '(' + feedUrlHash, this.name + ')' , 'build date', lastBuildDate, 'with stored build date', this.storedLastBuildDate);
+          if(this.storedLastBuildDate === lastBuildDate) { // no new articles...
+            this.streamStatus = 'destroyed';
+            stream.destroy();
+            console.log('Ending feed stream:', this.name);
+            callback(null, []);
+            return;
+          }
+        }
+        stream.on('readable', (() => {
+          let article;
+          console.log('Data Event', this.name);
+          while(article = stream.read()) {
+            console.log('Comparing', this.name, ':', article.title, article.date.getTime(), 'against last run', this.storedLastBuildDate);
+            if(article.date > this.storedLastBuildDate) {
+              articles.push(article);
+              console.log('Queued', this.name, ':', article.title);
+            }
+          }
+        }).bind(this));
+        global.DYNAMO_CLIENT.put({ // Run if we have new data or no data
+          TableName: config.DYNAMODB_TABLE_NAME,
+          Item: {
+            feed: feedUrlHash,
+            lastBuildDate,
+          }
+        }).promise().then((() =>{
+          console.log('Put feed info success:', this.name);
+        }).bind(this));
+      }).bind(this));
     }).bind(this));
-    stream.on('finish', () => {
+    stream.on('end', () => {
       callback(null, articles);
     });
-    stream.on('error', (err) => {
-      callback(err);
-    });
+    stream.on('error', ((err) => {
+      if(this.streamStatus === 'destroyed') { return; }
+      console.log('Stream Error [', err, ']:', this.name);
+    }).bind(this));
 
+    const request = https.request(this.feedUrl);
+    request.setTimeout(3000, (() => {
+      request.abort();
+      callback('Feed request timed out: ' + this.name);
+    }).bind(this));
     request.on('response', (res) => {
       res.setEncoding('utf8');
       res.pipe(stream);

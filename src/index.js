@@ -4,11 +4,13 @@ const querystring = require('querystring');
 
 const AWS = require('aws-sdk');
 
+const config = require('./config/config');
 const UpdateChannels = require('./config/updateChannels');
 const Feed = require('./classes/Feed');
 
 exports.handler = (event, context, callback) => {
-  const now = Date.now().toString();
+  AWS.config.update({region: config.AWS_SDK_REGION});
+  global.DYNAMO_CLIENT = new AWS.DynamoDB.DocumentClient();
 
   const feeds = UpdateChannels.map(channel => {
     return new Feed(channel.name,
@@ -22,18 +24,5 @@ exports.handler = (event, context, callback) => {
     feed.execute();
   }
 
-  const lambda = new AWS.Lambda();
-  const params = {
-    FunctionName: context.invokedFunctionArn,
-    Environment: {
-      Variables: {
-        'LAST_RUN_AT': now,
-      }
-    },
-  };
-  lambda.updateFunctionConfiguration(params, (err, data) => {
-    if (err) console.log(err, err.stack);
-    else console.log('New Timestamp', now);
-  });
 };
 
