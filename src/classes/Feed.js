@@ -25,7 +25,7 @@ class Feed {
   execute() {
     console.log('Fetching', this.name);
     this.fetchNewArticles((err, articles) => {
-      if(err) { console.error(err); return; }
+      if(err) { console.log('Fetch error, aborting feed', this.name, '[', err, ']'); return; }
       if(articles.length <= 0) { console.log('Finished', this.name, '(No new articles)'); return; }
       console.log('Fetched', this.name);
       const payload = {
@@ -33,7 +33,7 @@ class Feed {
       };
       console.log('Posting', this.name);
       this.webhookPost(payload, (err) => {
-        if(err) { console.error(err); return; }
+        if(err) { console.log('Post error', this.name, '[', err, ']'); return; }
         console.log('Posted', this.name);
       });
     });
@@ -106,7 +106,7 @@ class Feed {
       res.pipe(stream);
     });
     request.on('error', (err) => {
-      callback(err);
+      callback('Request Error: ' + err);
     });
     request.end();
   }
