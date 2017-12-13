@@ -18,8 +18,10 @@ class Feed {
     this.transformer = transformer;
     this.articles = [];
 
-    this.streamStatus = null;
+    this.feedUrlHash = null;
+    this.feedLastBuildDate = 0;
     this.storedLastBuildDate = 0;
+    this.streamStatus = null;
   }
 
   execute() {
@@ -46,19 +48,19 @@ class Feed {
     stream.on('meta', (() => {
       const hash = crypto.createHash('md4');
       hash.update(stream.meta.xmlUrl);
-      const feedUrlHash = hash.digest('base64');
-      const lastBuildDate = stream.meta.date.getTime();
+      this.feedUrlHash = hash.digest('base64');
+      this.feedLastBuildDate = stream.meta.date.getTime();
       const data = global.DYNAMO_CLIENT.get({
         TableName: config.DYNAMODB_TABLE_NAME,
         Key: {
-          feed: feedUrlHash,
+          feed: this.feedUrlHash,
         }
       }).promise().then(((data) => {
         console.log('Get feed dynamo success:', this.name);
         if(data.Item) {
           this.storedLastBuildDate = data.Item.lastBuildDate;
-          console.log('Comparing feed', '(' + feedUrlHash, this.name + ')' , 'build date', lastBuildDate, 'with stored build date', this.storedLastBuildDate);
-          if(this.storedLastBuildDate === lastBuildDate) { // no new articles...
+          console.log('Comparing feed', '(' + this.feedUrlHash, this.name + ')' , 'build date', this.feedLastBuildDate, 'with stored build date', this.storedLastBuildDate);
+          if(this.storedLastBuildDate === this.feedLastBuildDate) { // no new articles...
             this.streamStatus = 'destroyed';
             stream.destroy();
             console.log('Ending feed stream:', this.name);
@@ -76,15 +78,6 @@ class Feed {
               console.log('Queued', this.name, ':', article.title);
             }
           }
-        }).bind(this));
-        global.DYNAMO_CLIENT.put({ // Run if we have new data or no data
-          TableName: config.DYNAMODB_TABLE_NAME,
-          Item: {
-            feed: feedUrlHash,
-            lastBuildDate,
-          }
-        }).promise().then((() =>{
-          console.log('Put feed info success:', this.name);
         }).bind(this));
       }).bind(this));
     }).bind(this));
@@ -128,6 +121,15 @@ class Feed {
     };
 
     const request = https.request(options, (res) => {
+      global.DYNAMO_CLIENT.put({ // Run if we have new data or no data
+        TableName: config.DYNAMODB_TABLE_NAME,
+        Item: {
+          feed: this.feedUrlHash,
+          lastBuildDate: this.feedLastBuildDate,
+        }
+      }).promise().then((() =>{
+        console.log('Put feed info success:', this.name);
+      }).bind(this));
       callback();
     });
     request.setTimeout(3000, (() => {
