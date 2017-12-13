@@ -1,7 +1,7 @@
 /**
  * DynamoDB Table Schema:
  *   feed: String
- *   lastBuildDate: String
+ *   lastBuildDate: Number
  */
 
 module.exports = {
