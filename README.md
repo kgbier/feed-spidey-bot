@@ -8,9 +8,9 @@ A Discord webhook bot that posts updates from rss/atom feeds, designed to be com
 
 ## Usage
 
-1. Configure `./config/config.js` with AWS DynamoDB Table and Region
+1. Configure `./src/config/config.js` with AWS DynamoDB Table and Region
 
-2. Configure `./config/updateChannels.js`, `./config/webhookEndpoints.js`, `./config/personalities.js` with valid webhook and feed data (as covered in [Overview](#overview))
+2. Configure `./src/config/updateChannels.js`, `./src/config/webhookEndpoints.js`, `./src/config/personalities.js` with valid webhook and feed data (as covered in [Overview](#overview))
 
 3. `$ yarn build` - Compiles with webpack into `./dist/bundle.js`
 
