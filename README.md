@@ -2,15 +2,19 @@
 
 ##### Konrad Biernacki (kgbier@gmail.com)
 
-Discord webhook bot that posts updates from rss/atom feeds.
+A Discord webhook bot that posts updates from rss/atom feeds, designed to be compiled and deployed into AWS Lambda.
 
-Designed to be compiled and deployed into AWS Lambda.
+- Dependency on AWS DynamoDB for per-feed record keeping
 
 ## Usage
 
-`$ yarn build` - Compiles with webpack into `./dist/bundle.js`
+1. Configure `./config/config.js` with AWS DynamoDB Table and Region
 
-`$ yarn deploy` - Uploads to a specified lambda function using the `aws-cli` (uses `./deploy.sh`)
+2. Configure `./config/updateChannels.js`, `./config/webhookEndpoints.js`, `./config/personalities.js` with valid webhook and feed data (as covered in [Overview](#overview))
+
+3. `$ yarn build` - Compiles with webpack into `./dist/bundle.js`
+
+4. `$ yarn deploy` - Uploads to a specified lambda function using the `aws-cli` (uses `./deploy.sh`)
 
 ## Run
 
@@ -21,10 +25,11 @@ or
 `$ node run.bundle.js` to run the minified/bundled program
 
 ## Overview
+<a name="overview"></a>
 
 - config/webhookEndpoints.js
 
-A named collection of webhook endpoints.
+Describes a named collection of webhook endpoints.
 
 ```javascript
 {
@@ -59,7 +64,7 @@ NB: Colour is expressed in Integer format
 Contains a list of Channels.
 A Channel comprises a feed URL, a transform to compose the Discord Embed object from an Article, and a Personality to post articles to.
 
-Transform object is required to compliment to discord Embed object as seen [here](https://discordapp.com/developers/docs/resources/channel#embed-object)
+Transform object is required to compliment discord Embed object as seen [here](https://discordapp.com/developers/docs/resources/channel#embed-object).
 
 ```javascript
 [
