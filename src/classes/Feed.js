@@ -47,7 +47,7 @@ class Feed {
 
     stream.on('meta', (() => {
       const hash = crypto.createHash('md4');
-      hash.update(stream.meta.xmlUrl);
+      hash.update(this.feedUrl);
       this.feedUrlHash = hash.digest('base64');
       this.feedLastBuildDate = stream.meta.date.getTime();
       const data = global.DYNAMO_CLIENT.get({
