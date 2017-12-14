@@ -72,7 +72,6 @@ class Feed {
         }
         stream.on('readable', (() => {
           let article;
-          console.log('Data Event', this.name);
           while(article = stream.read()) {
             console.log('Comparing', this.name, ':', article.title, article.date.getTime(), 'against last run', this.storedLastBuildDate);
             if(article.date > this.storedLastBuildDate) {
