@@ -1,4 +1,6 @@
+const http = require('http');
 const https = require('https');
+
 const crypto = require('crypto');
 
 const FeedParser = require('feedparser');
@@ -89,7 +91,10 @@ class Feed {
       console.log('Stream Error [', err, ']:', this.name);
     }).bind(this));
 
-    const request = https.request(this.feedUrl);
+    const isHTTPS = this.feedUrl.startsWith('https');
+    const request_module = isHTTPS ? https : http;
+
+    const request = request_module.request(this.feedUrl);
     request.setTimeout(3000, (() => {
       request.abort();
       callback('Feed request timed out: ' + this.name);
