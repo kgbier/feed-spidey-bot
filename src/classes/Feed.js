@@ -58,8 +58,8 @@ class Feed {
           feed: this.feedUrlHash,
         }
       }).promise().then(((data) => {
-        console.log('Get feed dynamo success:', this.name);
         if(data.Item) {
+          console.log('[DynamoDB] Get Feed lastBuildDate success:', this.name);
           this.storedLastBuildDate = data.Item.lastBuildDate;
           console.log('Comparing feed', '(' + this.feedUrlHash, this.name + ')' , 'build date', this.feedLastBuildDate, 'with stored build date', this.storedLastBuildDate);
           if(this.storedLastBuildDate === this.feedLastBuildDate) { // no new articles...
@@ -69,6 +69,8 @@ class Feed {
             callback(null, []);
             return;
           }
+        } else {
+          console.log('[DynamoDB] Get Feed empty lastBuildDate success:', this.name);
         }
         stream.on('readable', (() => {
           let article;
