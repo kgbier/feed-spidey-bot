@@ -80,7 +80,9 @@ class Feed {
             }
           }
         }).bind(this));
-      }).bind(this));
+      }).bind(this)).catch((e) => {
+        console.log('[DynamoDB] Get Exception: [', e, ']:', this.name);
+      });
     }).bind(this));
     stream.on('end', () => {
       callback(null, articles);
@@ -133,7 +135,9 @@ class Feed {
         }
       }).promise().then((() =>{
         console.log('Put feed info success:', this.name);
-      }).bind(this));
+      }).bind(this)).catch((e) => {
+        console.log('[DynamoDB] Put Exception: [', e, ']:', this.name);
+      });
       callback();
     });
     request.setTimeout(3000, (() => {
