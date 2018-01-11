@@ -17,7 +17,8 @@ exports.handler = (event, context, callback) => {
                     channel.description,
                     channel.personality,
                     channel.feedUrl,
-                    channel.transformer);
+                    channel.transformer,
+                    channel.categoryFilter);
   });
 
   for(const feed of feeds) {

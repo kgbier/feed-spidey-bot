@@ -11,13 +11,14 @@ const WebhookEndpoints = require('../config/webhookEndpoints');
 
 class Feed {
 
-  constructor(name, description, personality, feedUrl, transformer) {
+  constructor(name, description, personality, feedUrl, transformer, categoryFilters) {
     this.personality = Personalities[personality];
     this.webhook = WebhookEndpoints[this.personality.subscriber];
     this.name = name;
     this.description = description;
     this.feedUrl = feedUrl;
     this.transformer = transformer;
+    this.categoryFilters = categoryFilters ? categoryFilters : null; // Optional parameter
     this.articles = [];
 
     this.feedUrlHash = null;
@@ -74,12 +75,29 @@ class Feed {
         }
         stream.on('readable', (() => {
           let article;
+          let isFilteredOut = true;
           while(article = stream.read()) {
             console.log('Comparing', this.name, ':', article.title, article.date.getTime(), 'against last run', this.storedLastBuildDate);
-            if(article.date > this.storedLastBuildDate) {
-              articles.push(article);
-              console.log('Queued', this.name, ':', article.title);
+            if(article.date <= this.storedLastBuildDate) {
+              return;
             }
+            if(this.categoryFilters) {
+              console.log('Comparing', this.name, ':', article.title, article.categories, 'against category filters', this.categoryFilters);
+              for(let i = 0; i < this.categoryFilters.length; i++) {
+                const testCategory = this.categoryFilters[i];
+                if(article.categories.includes(testCategory)) {
+                  console.log('Filtered In', this.name, ':', article.title, testCategory);
+                  isFilteredOut = false;
+                  break;
+                }
+              }
+              if(isFilteredOut) {
+                console.log('Filtered Out', this.name, ':', article.title);
+                return;
+              }
+            }
+            articles.push(article);
+            console.log('Queued', this.name, ':', article.title);
           }
         }).bind(this));
       }).bind(this)).catch((e) => {
