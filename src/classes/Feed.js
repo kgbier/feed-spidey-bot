@@ -79,6 +79,7 @@ class Feed {
           while(article = stream.read()) {
             console.log('Comparing', this.name, ':', article.title, article.date.getTime(), 'against last run', this.storedLastBuildDate);
             if(article.date <= this.storedLastBuildDate) {
+              while(stream.read()) ; // Empty the stream because we don't want to explicitly revisit any entries and we want to trigger the 'end' event.
               return;
             }
             if(this.categoryFilters) {
@@ -93,7 +94,7 @@ class Feed {
               }
               if(isFilteredOut) {
                 console.log('Filtered Out', this.name, ':', article.title);
-                return;
+                continue; // Move onto (perhaps) another article in our buffer if available
               }
             }
             articles.push(article);
